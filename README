@@ -1,0 +1,16 @@
+# plojuctor
+
+Plojuctor is a simple presentation tool in clojure repl.
+
+## Usage
+
+lein deps
+lein repl
+(use 'plojuctor.core :reload)
+(next-page!)
+
+## License
+
+Copyright (C) 2011 Masashi Iizuka
+
+Distributed under the Eclipse Public License, the same as Clojure.
