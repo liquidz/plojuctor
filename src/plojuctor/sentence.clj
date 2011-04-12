@@ -14,10 +14,10 @@
   ex. `(defsentence add-string-to-last [s v] (map #(str % v) v))`"
   [name & args]
   (let [first-arg (first args)
-        [doc-or-meta bind & body] (if (or (string? first-arg) (map? first-arg)) args (cons "" args))
+        [doc-string bind & body] (if (or (string? first-arg) (map? first-arg)) args (cons "" args))
         fa (last bind)
         rest-arg (drop-last bind)]
-    `(defn ~name [~@bind]
+    `(defn ~name ~doc-string [~@bind]
        (if (string? ~fa) (recur ~@rest-arg [~fa])
          (let [res# (do ~@body)]
            (if (vector? res#) res# (vec res#)))))))
@@ -58,29 +58,34 @@
   [(apply str (flatten x))])
 
 ; =strong
-;: font-weight: "bold"
-(defsentence strong [v]
+(defsentence strong
+  "font-weight: \"bold\""
+  [v]
   (map #(str "\"" % "\"") v))
 
 ; =header
-;; h1 tag in html
-(defsentence header [v]
+(defsentence header
+  "h1 tag in html"
+  [v]
   (map #(str ":" (string/replace-str " " "_" %)) v))
 
 ; =underline
-;;  text-decoration: underline
-(defsentence underline [v]
+(defsentence underline
+  "text-decoration: underline"
+  [v]
   (conj v (string/repeat (apply max (map mb-count v)) "~")))
 
 ; =padding-left
-;; padding-left: [N]em;
-(defsentence padding-left [n v]
+(defsentence padding-left
+  "padding-left: [N]em"
+  [n v]
   (let [sp (string/repeat n " ")]
     (map #(if (string/blank? %) "" (str sp %)) v)))
 
 ; =letter-space
-;; letter-spacing: [N]em
-(defsentence letter-space [n v]
+(defsentence letter-space
+  "letter-spacing: [N]em"
+  [n v]
   (map #(string/join (string/repeat n " ")  (map str %)) v))
 (def letter-1space (partial letter-space 1))
 
@@ -90,24 +95,27 @@
 (def wrap-page (partial wrap *width*))
 
 ; =center
-;; text-align: center
-(defsentence center [width v]
+(defsentence center
+  "text-align: center"
+  [width v]
   (map #(if (> (mb-count %) width) %
           (str (string/repeat (calc-center (mb-count %) width) " ") %)) v))
 ;; text-align: center (with default page width)
 (def center-page (partial center *width*))
 
 ; =right
-;; text-align: right
-(defsentence right [width v]
+(defsentence right
+  "text-align: right"
+  [width v]
   (map #(if (> (mb-count %) width) %
           (str (string/repeat (- width (mb-count %)) " ") %)) v))
 ;; text-align: right (with default page width)
 (def right-page (partial right *width*))
 
 ; =vertical-center
-;; vertical-align: middle
-(defsentence vertical-center [height v]
+(defsentence vertical-center
+  "vertical-align: middle"
+  [height v]
   (if (> (count v) height) v
     (lines (repeat (calc-center (count v) height) blank) v)))
 ;; vertical-align: middle (with default page height)
@@ -119,8 +127,9 @@
 (def middle-page vertical-center-page)
 
 ; =buttom
-;; vertical-align: bottom
-(defsentence bottom [height base v]
+(defsentence bottom
+  "vertical-align: bottom"
+  [height base v]
   (let [len (+ (count base) (count v))]
     (if (> len height) v
       (lines base (repeat (- height len) blank) v))))
@@ -142,8 +151,9 @@
   `(vector (str '~@exp)))
 
 ; =box
-;; Box vectors, lists, or strings
-(defsentence box [v]
+(defsentence box
+  "Box vectors, lists, or strings"
+  [v]
   (let [wmax (apply max (map count v))
         border (str "+" (string/repeat (+ 2 wmax) "-") "+") ]
     (lines
@@ -152,12 +162,14 @@
       border)))
 
 ; =project-title
-;; Project title
-(defsentence project-title [s]
+(defsentence project-title
+  "Project title"
+  [s]
   (lines blank (-> s letter-1space wrap-page underline center-page) blank))
 
 ; =title
-;; Slide title
-(defsentence title [s]
+(defsentence title
+  "Slide title"
+  [s]
   (lines (->> s letter-1space wrap-page underline (padding-left 1)) blank))
 

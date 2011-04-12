@@ -2654,7 +2654,7 @@ $(document).ready(function() {
         [doc-or-meta bind & body] (if (or (string? first-arg) (map? first-arg)) args (cons "" args))
         fa (last bind)
         rest-arg (drop-last bind)]
-    `(defn ~name [~@bind]
+    `(defn ~name ~doc-or-meta [~@bind]
        (if (string? ~fa) (recur ~@rest-arg [~fa])
          (let [res# (do ~@body)]
            (if (vector? res#) res# (vec res#)))))))</pre></tr><tr><td class="docs"><p>Utility to split string</p>
@@ -2676,37 +2676,46 @@ $(document).ready(function() {
   (vec (flatten (map #(if (string? %) [%] (if (vector? %) % (vec %))) x))))</pre></tr><tr><td class="docs"><p>Concat lists, vectors or strings to a vector wrapped string</p>
 </td><td class="codes" /><pre class="brush: clojure">(defn inline
   [& x]
-  [(apply str (flatten x))])</pre></tr><tr><td class="docs"><p>: font-weight: "bold"</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence strong [v]
-  (map #(str "\ % "\) v))</pre></tr><tr><td class="docs"><p>h1 tag in html</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence header [v]
+  [(apply str (flatten x))])</pre></tr><tr><td class="docs"><p>font-weight: "bold"</p>
+</td><td class="codes" /><pre class="brush: clojure">(defsentence strong
+  [v]
+  (map #(str "\"" % "\"") v))</pre></tr><tr><td class="docs"><p>h1 tag in html</p>
+</td><td class="codes" /><pre class="brush: clojure">(defsentence header
+  [v]
   (map #(str ":" (string/replace-str " " "_" %)) v))</pre></tr><tr><td class="docs"><p>text-decoration: underline</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence underline [v]
-  (conj v (string/repeat (apply max (map mb-count v)) "~")))</pre></tr><tr><td class="docs"><p>padding-left: [N]em;</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence padding-left [n v]
+</td><td class="codes" /><pre class="brush: clojure">(defsentence underline
+  [v]
+  (conj v (string/repeat (apply max (map mb-count v)) "~")))</pre></tr><tr><td class="docs"><p>padding-left: [N]em</p>
+</td><td class="codes" /><pre class="brush: clojure">(defsentence padding-left
+  [n v]
   (let [sp (string/repeat n " ")]
-    (map #(if (string/blank? %)  (str sp %)) v)))</pre></tr><tr><td class="docs"><p>letter-spacing: [N]em</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence letter-space [n v]
+    (map #(if (string/blank? %) "" (str sp %)) v)))</pre></tr><tr><td class="docs"><p>letter-spacing: [N]em</p>
+</td><td class="codes" /><pre class="brush: clojure">(defsentence letter-space
+  [n v]
   (map #(string/join (string/repeat n " ")  (map str %)) v))
 (def letter-1space (partial letter-space 1))</pre></tr><tr><td class="docs">
 </td><td class="codes" /><pre class="brush: clojure">(defsentence wrap [width v]
   (flatten (map #(if (> (mb-count %) width) (string-split-at width %) %) v)))
 (def wrap-page (partial wrap *width*))</pre></tr><tr><td class="docs"><p>text-align: center</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence center [width v]
+</td><td class="codes" /><pre class="brush: clojure">(defsentence center
+  [width v]
   (map #(if (> (mb-count %) width) %
           (str (string/repeat (calc-center (mb-count %) width) " ") %)) v))</pre></tr><tr><td class="docs"><p>text-align: center (with default page width)</p>
 </td><td class="codes" /><pre class="brush: clojure">(def center-page (partial center *width*))</pre></tr><tr><td class="docs"><p>text-align: right</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence right [width v]
+</td><td class="codes" /><pre class="brush: clojure">(defsentence right
+  [width v]
   (map #(if (> (mb-count %) width) %
           (str (string/repeat (- width (mb-count %)) " ") %)) v))</pre></tr><tr><td class="docs"><p>text-align: right (with default page width)</p>
 </td><td class="codes" /><pre class="brush: clojure">(def right-page (partial right *width*))</pre></tr><tr><td class="docs"><p>vertical-align: middle</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence vertical-center [height v]
+</td><td class="codes" /><pre class="brush: clojure">(defsentence vertical-center
+  [height v]
   (if (> (count v) height) v
     (lines (repeat (calc-center (count v) height) blank) v)))</pre></tr><tr><td class="docs"><p>vertical-align: middle (with default page height)</p>
 </td><td class="codes" /><pre class="brush: clojure">(def vertical-center-page (partial vertical-center *height*))</pre></tr><tr><td class="docs"><p>alias of vertical-center</p>
 </td><td class="codes" /><pre class="brush: clojure">(def middle vertical-center)</pre></tr><tr><td class="docs"><p>alias of vertical-center-page</p>
 </td><td class="codes" /><pre class="brush: clojure">(def middle-page vertical-center-page)</pre></tr><tr><td class="docs"><p>vertical-align: bottom</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence bottom [height base v]
+</td><td class="codes" /><pre class="brush: clojure">(defsentence bottom
+  [height base v]
   (let [len (+ (count base) (count v))]
     (if (> len height) v
       (lines base (repeat (- height len) blank) v))))</pre></tr><tr><td class="docs"><p>vertical-align: bottom (with default page height)</p>
@@ -2719,15 +2728,18 @@ $(document).ready(function() {
 </td><td class="codes" /><pre class="brush: clojure">(defmacro code
   [& exp]
   `(vector (str '~@exp)))</pre></tr><tr><td class="docs"><p>Box vectors, lists, or strings</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence box [v]
+</td><td class="codes" /><pre class="brush: clojure">(defsentence box
+  [v]
   (let [wmax (apply max (map count v))
         border (str "+" (string/repeat (+ 2 wmax) "-") "+") ]
     (lines
       border
       (map #(str "| " % (string/repeat (- wmax (mb-count %)) " ") " |") v)
       border)))</pre></tr><tr><td class="docs"><p>Project title</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence project-title [s]
+</td><td class="codes" /><pre class="brush: clojure">(defsentence project-title
+  [s]
   (lines blank (-> s letter-1space wrap-page underline center-page) blank))</pre></tr><tr><td class="docs"><p>Slide title</p>
-</td><td class="codes" /><pre class="brush: clojure">(defsentence title [s]
+</td><td class="codes" /><pre class="brush: clojure">(defsentence title
+  [s]
   (lines (->> s letter-1space wrap-page underline (padding-left 1)) blank))</pre></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_plojuctor.slide">plojuctor.slide</li><li class="floating-toc-li" id="floating-toc_plojuctor.core">plojuctor.core</li><li class="floating-toc-li" id="floating-toc_plojuctor.common">plojuctor.common</li><li class="floating-toc-li" id="floating-toc_plojuctor.sentence">plojuctor.sentence</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
