@@ -2,17 +2,27 @@
   (:use [plojuctor slide sentence])
   (:require [clojure.contrib.string :as string]))
 
-; controller {{{
-(defn move-page! [n]
+; controller  {{{
+;; ## Slide Controllers
+
+(defn move-page!
+  "move to nth slide, and show the slide
+  
+   * `n` is positive integer"
+  [n]
   (reset! page n)
   (show-page))
 
-(defn next-page! []
+(defn next-page!
+  "move to next, and show the slide"
+  []
   (when (< @page (-> @slides count dec))
     (swap! page inc)
     (show-page)))
 
-(defn prev-page! []
+(defn prev-page!
+  "move to previous, and show the slide"
+  []
   (when (> @page 0)
     (swap! page dec)
     (show-page)))
@@ -20,10 +30,14 @@
 (init-slides!)
 ; }}}
 
-(defmacro container [& sentences]
+;; ----------------------
+(defmacro container
+  "Sample local utility to wrap with padding-left:2"
+  [& sentences]
   `(padding-left 2 (lines ~@sentences)))
 
-(defslide
+;; ## Example slides
+(slide
   (middle-page
     (lines
       (project-title "Plojuctor")
@@ -32,7 +46,7 @@
       (center-page
         (inline (code (prev-page!)) " / " (code (next-page!)) " でスライド移動")))))
 
-(defslide
+(slide
   (title "Plojuctorとは？")
   (container
     (item "Clojure REPL上で動作するプレゼンテーションツール" blank
@@ -44,7 +58,7 @@
 
           "センテンスを自由に定義することでカスタマイズ可能")))
 
-(defslide
+(slide
   (title "センテンス")
   (container
     (header "underline")
@@ -64,10 +78,10 @@
 
     "などなど"))
 
-(defslide
+(slide
   (middle-page
     (center-page
-      (letter-space 2 (lines "Clojureで" "プレゼンしよう!")))))
+      (letter-space 2 (lines "Clojure REPLで" "プレゼンしよう!")))))
 
 
 
