@@ -2,9 +2,20 @@
 
 (ns plojuctor.sentence
   (:use [plojuctor common])
+  (:use clojure.test)
   (:require [clojure.contrib.string :as string]
+            [clojure.contrib.seq :as seq]
             [clojure.contrib.math :as math]
             ))
+
+(def *underline-char* "~")
+(def *item-char* "*")
+
+(defn force-vector [x]
+  (cond
+    (vector? x) x
+    (seq? x) (vec x)
+    :else (vector x)))
 
 ; =defsentence
 (defmacro defsentence
@@ -13,14 +24,19 @@
 
   ex. `(defsentence add-string-to-last [s v] (map #(str % v) v))`"
   [name & args]
-  (let [first-arg (first args)
-        [doc-string bind & body] (if (or (string? first-arg) (map? first-arg)) args (cons "" args))
-        fa (last bind)
-        rest-arg (drop-last bind)]
-    `(defn ~name ~doc-string [~@bind]
-       (if (string? ~fa) (recur ~@rest-arg [~fa])
-         (let [res# (do ~@body)]
-           (if (vector? res#) res# (vec res#)))))))
+  (let [doc-string? (-> args first string?)
+        [doc-string bind & body] (if doc-string? args (cons "" args))
+        flexible? (not (nil? (seq/find-first #(= % '&) bind)))
+        fixed-arg (last bind)
+        rest-arg (drop-last (if flexible? 2 1) bind) ]
+    `(defn ~name [~@bind]
+       (if ~flexible?
+         (if (some (comp not vector?) ~fixed-arg)
+           (recur ~@rest-arg (vec (map force-vector ~fixed-arg)))
+           (force-vector (do ~@body)))
+         (if (vector? ~fixed-arg)
+           (force-vector (do ~@body))
+           (recur ~@rest-arg (force-vector ~fixed-arg)))))))
 
 ; =string-split-at
 (defn- string-split-at
@@ -73,7 +89,7 @@
 (defsentence underline
   "text-decoration: underline"
   [v]
-  (conj v (string/repeat (apply max (map mb-count v)) "~")))
+  (conj v (string/repeat (apply max (map mb-count v)) *underline-char*)))
 
 ; =padding-left
 (defsentence padding-left
@@ -131,17 +147,20 @@
   "vertical-align: bottom"
   [height base v]
   (let [len (+ (count base) (count v))]
-    (if (> len height) v
+    (if (> len height) base
       (lines base (repeat (- height len) blank) v))))
 ;; vertical-align: bottom (with default page height)
 (def bottom-page (partial bottom *height*))
 
 ; =item
+(def item-find-regexp
+  (java.util.regex.Pattern/compile (str "^\\s+\\" *item-char* "\\s")))
 (defn item
   "Itemize lists, vectors, or strings"
   [& x]
   (vec (map
-    #(if (string/blank? %) % (str (if (re-find #"^\s+\*\s" %) "  " " * ") %))
+    ;#(if (string/blank? %) % (str (if (re-find #"^\s+\*\s" %) "  " " * ") %))
+    #(if (string/blank? %) % (str (if (re-find item-find-regexp %) "  " " * ") %))
     (apply lines x))))
 
 ; =code
